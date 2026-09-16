@@ -7,6 +7,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 add_executable(kbe 
     src/main.c
+    src/gb.h
 )
 
 target_compile_options(kbe PRIVATE -Wall -Wextra)
