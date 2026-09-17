@@ -10,6 +10,8 @@ add_executable(kbe
     src/gb.h
     src/bus.c
     src/bus.h
+    src/cart.c
+    src/cart.h
 )
 
 target_compile_options(kbe PRIVATE -Wall -Wextra)
