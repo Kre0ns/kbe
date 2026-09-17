@@ -79,3 +79,4 @@ typedef struct
     uint8_t ie;
 } gb_t;
 
+void gb_init(gb_t *gb);

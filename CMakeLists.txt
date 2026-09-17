@@ -7,11 +7,14 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 add_executable(kbe 
     src/main.c
+    src/gb.c
     src/gb.h
     src/bus.c
     src/bus.h
     src/cart.c
     src/cart.h
+    src/cpu.c
+    src/cpu.h
 )
 
 target_compile_options(kbe PRIVATE -Wall -Wextra)
