@@ -1,3 +1,5 @@
+#pragma once
+
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -7,6 +9,7 @@ typedef struct
     uint8_t *rom;
     size_t rom_size;
 
+    uint8_t type;
 } cart_t;
 
 typedef struct
