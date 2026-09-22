@@ -6,6 +6,14 @@
 
 typedef struct
 {
+    uint8_t *rom;
+    size_t rom_size;
+
+    uint8_t type;
+} cart_t;
+
+typedef struct
+{
     union
     {
         struct
@@ -54,22 +62,20 @@ typedef struct
     uint16_t pc;
 
     bool ime;
+    bool ime_pending;
     bool halted;
-    
 } cpu_t;
 
 typedef struct
 {
-    uint8_t *rom;
-    size_t rom_size;
-
-    uint8_t type;
-} cart_t;
+    uint16_t dots;
+} ppu_t;
 
 typedef struct
 {
     cart_t cart;
     cpu_t cpu;
+    ppu_t ppu;
     
     uint8_t wram[0x2000];
     uint8_t vram[0x2000];

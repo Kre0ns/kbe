@@ -15,6 +15,9 @@ add_executable(kbe
     src/cart.h
     src/cpu.c
     src/cpu.h
+    src/io.h
+    src/ppu.h
+    src/ppu.c
 )
 
 target_compile_options(kbe PRIVATE -Wall -Wextra)
