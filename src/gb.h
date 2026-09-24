@@ -69,6 +69,9 @@ typedef struct
 typedef struct
 {
     uint16_t dots;
+    
+    uint8_t frame_buffer[144][160];
+    bool frame_ready;
 } ppu_t;
 
 typedef struct
