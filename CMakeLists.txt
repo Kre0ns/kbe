@@ -21,6 +21,7 @@ add_executable(kbe
     src/bus.c
     src/cart.c
     src/cpu.c
+    src/ops.c
     src/ppu.c
     src/joypad.c
     src/timer.c
