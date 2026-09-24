@@ -18,16 +18,11 @@ FetchContent_MakeAvailable(raylib)
 add_executable(kbe 
     src/main.c
     src/gb.c
-    src/gb.h
     src/bus.c
-    src/bus.h
     src/cart.c
-    src/cart.h
     src/cpu.c
-    src/cpu.h
-    src/io.h
-    src/ppu.h
     src/ppu.c
+    src/joypad.c
 )
 
 target_compile_options(kbe PRIVATE -Wall -Wextra)
