@@ -7,6 +7,7 @@
 #include "cpu.h"
 #include "bus.h"
 #include "ppu.h"
+#include "timer.h"
 
 #define SCREEN_WIDTH 160
 #define SCREEN_HEIGHT 144
@@ -43,7 +44,14 @@ int main()
         gb.joypad.select = IsKeyDown(KEY_RIGHT_SHIFT);
         gb.joypad.start = IsKeyDown(KEY_ENTER);
 
-        while (!gb.ppu.frame_ready) ppu_step(&gb, cpu_step(&gb));
+        while (!gb.ppu.frame_ready) 
+        {
+            uint8_t cycles = cpu_step(&gb);
+
+            ppu_step(&gb, cycles);
+            timer_step(&gb, cycles);
+        }
+
         gb.ppu.frame_ready = false;
 
         image_from_frame(&gb, &image);

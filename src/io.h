@@ -1,6 +1,7 @@
 #pragma once
 
 #define REG_JOYP    0x00
+#define REG_DIV     0x04
 #define REG_IF      0x0F
 #define REG_LCDC    0x40
 #define REG_SCY     0x42

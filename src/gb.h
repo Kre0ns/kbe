@@ -82,10 +82,17 @@ typedef struct
 
 typedef struct
 {
+    uint16_t div_counter;
+} timers_t;
+
+
+typedef struct
+{
     cart_t cart;
     cpu_t cpu;
     ppu_t ppu;
     joypad_t joypad;
+    timers_t timers;
     
     uint8_t wram[0x2000];
     uint8_t vram[0x2000];

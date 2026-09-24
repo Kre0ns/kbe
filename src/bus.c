@@ -22,6 +22,8 @@ uint8_t bus_read(gb_t *gb, uint16_t addr)
 
 void bus_write(gb_t *gb, uint16_t addr, uint8_t val)
 {
+    if (addr == 0xFF04) { gb->io[REG_DIV] = 0; return; } 
+
     if (addr <= 0x7FFF) cart_write(gb, addr, val);
     else if (addr <= 0x9FFF) gb->vram[addr - 0x8000] = val;
     else if (addr <= 0xBFFF) cart_write(gb, addr, val);

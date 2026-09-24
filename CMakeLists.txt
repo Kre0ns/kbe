@@ -23,6 +23,7 @@ add_executable(kbe
     src/cpu.c
     src/ppu.c
     src/joypad.c
+    src/timer.c
 )
 
 target_compile_options(kbe PRIVATE -Wall -Wextra)
