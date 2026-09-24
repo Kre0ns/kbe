@@ -72,6 +72,8 @@ typedef struct
     
     uint8_t frame_buffer[144][160];
     bool frame_ready;
+
+    uint8_t line;
 } ppu_t;
 
 typedef struct
