@@ -46,6 +46,8 @@ int main()
         EndDrawing();
     }
 
+    UnloadTexture(texture);
+    UnloadImage(image);
     CloseWindow();
 
     cart_free(&gb);
