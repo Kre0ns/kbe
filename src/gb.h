@@ -76,9 +76,16 @@ typedef struct
 
 typedef struct
 {
+    bool right, left, up, down;
+    bool a, b, select, start;
+} joypad_t;
+
+typedef struct
+{
     cart_t cart;
     cpu_t cpu;
     ppu_t ppu;
+    joypad_t joypad;
     
     uint8_t wram[0x2000];
     uint8_t vram[0x2000];

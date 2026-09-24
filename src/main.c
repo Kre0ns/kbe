@@ -33,6 +33,16 @@ int main()
 
     while (!WindowShouldClose())
     {
+        gb.joypad.right = IsKeyDown(KEY_RIGHT);
+        gb.joypad.left = IsKeyDown(KEY_LEFT);
+        gb.joypad.up = IsKeyDown(KEY_UP);
+        gb.joypad.down = IsKeyDown(KEY_DOWN);
+
+        gb.joypad.a = IsKeyDown(KEY_X);
+        gb.joypad.b = IsKeyDown(KEY_Z);
+        gb.joypad.select = IsKeyDown(KEY_RIGHT_SHIFT);
+        gb.joypad.start = IsKeyDown(KEY_ENTER);
+
         while (!gb.ppu.frame_ready) ppu_step(&gb, cpu_step(&gb));
         gb.ppu.frame_ready = false;
 
