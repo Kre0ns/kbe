@@ -71,6 +71,21 @@ static uint8_t op_cp_r(gb_t *gb, uint8_t opcode);
 static uint8_t op_sub_n(gb_t *gb, uint8_t opcode);
 static uint8_t op_daa(gb_t *gb, uint8_t opcode);
 static uint8_t op_xor_n(gb_t *gb, uint8_t opcode);
+static uint8_t op_ld_nn_sp(gb_t *gb, uint8_t opcode);
+static uint8_t op_rrca(gb_t *gb, uint8_t opcode);
+static uint8_t op_rla(gb_t *gb, uint8_t opcode);
+static uint8_t op_rra(gb_t *gb, uint8_t opcode);
+static uint8_t op_scf(gb_t *gb, uint8_t opcode);
+static uint8_t op_ccf(gb_t *gb, uint8_t opcode);
+static uint8_t op_stop(gb_t *gb, uint8_t opcode);
+static uint8_t op_halt(gb_t *gb, uint8_t opcode);
+static uint8_t op_sbc_r(gb_t *gb, uint8_t opcode);
+static uint8_t op_call_cc_nn(gb_t *gb, uint8_t opcode);
+static uint8_t op_adc_n(gb_t *gb, uint8_t opcode);
+static uint8_t op_sbc_n(gb_t *gb, uint8_t opcode);
+static uint8_t op_add_sp_e(gb_t *gb, uint8_t opcode);
+static uint8_t op_ld_hl_spe(gb_t *gb, uint8_t opcode);
+static uint8_t op_ld_sp_hl(gb_t *gb, uint8_t opcode);
 
 static uint8_t cpu_execute_cb(gb_t *gb, uint8_t opcode);
 
@@ -84,23 +99,23 @@ static uint8_t op_set_b_r(gb_t *gb, uint8_t opcode);
 static uint8_t op_bit_b_r(gb_t *gb, uint8_t opcode);
 
 static uint8_t (*const op_table[256])(gb_t*, uint8_t) = {
-//       X0          X1           X2           X3         X4         X5          X6         X7         X8          X9            XA           XB              XC         XD          XE         XF
-/* 0X */ op_nop,     op_ld_rr_nn, op_ld_ind_a, op_inc_rr, op_inc_r,  op_dec_r,   op_ld_r_n, op_rlca,   NULL,       op_add_hl_rr, op_ld_a_ind, op_dec_rr,      op_inc_r,  op_dec_r,   op_ld_r_n, NULL,      
-/* 1X */ NULL,       op_ld_rr_nn, op_ld_ind_a, op_inc_rr, op_inc_r,  op_dec_r,   op_ld_r_n, NULL,      op_jr_e,    op_add_hl_rr, op_ld_a_ind, op_dec_rr,      op_inc_r,  op_dec_r,   op_ld_r_n, NULL,      
-/* 2X */ op_jr_cc_e, op_ld_rr_nn, op_ld_ind_a, op_inc_rr, op_inc_r,  op_dec_r,   op_ld_r_n, op_daa,    op_jr_cc_e, op_add_hl_rr, op_ld_a_ind, op_dec_rr,      op_inc_r,  op_dec_r,   op_ld_r_n, op_cpl,      
-/* 3X */ op_jr_cc_e, op_ld_rr_nn, op_ld_ind_a, op_inc_rr, op_inc_r,  op_dec_r,   op_ld_r_n, NULL,      op_jr_cc_e, op_add_hl_rr, op_ld_a_ind, op_dec_rr,      op_inc_r,  op_dec_r,   op_ld_r_n, NULL,      
-/* 4X */ op_ld_r_r,  op_ld_r_r,   op_ld_r_r,   op_ld_r_r, op_ld_r_r, op_ld_r_r,  op_ld_r_r, op_ld_r_r, op_ld_r_r,  op_ld_r_r,    op_ld_r_r,   op_ld_r_r,      op_ld_r_r, op_ld_r_r,  op_ld_r_r, op_ld_r_r, 
-/* 5X */ op_ld_r_r,  op_ld_r_r,   op_ld_r_r,   op_ld_r_r, op_ld_r_r, op_ld_r_r,  op_ld_r_r, op_ld_r_r, op_ld_r_r,  op_ld_r_r,    op_ld_r_r,   op_ld_r_r,      op_ld_r_r, op_ld_r_r,  op_ld_r_r, op_ld_r_r, 
-/* 6X */ op_ld_r_r,  op_ld_r_r,   op_ld_r_r,   op_ld_r_r, op_ld_r_r, op_ld_r_r,  op_ld_r_r, op_ld_r_r, op_ld_r_r,  op_ld_r_r,    op_ld_r_r,   op_ld_r_r,      op_ld_r_r, op_ld_r_r,  op_ld_r_r, op_ld_r_r,
-/* 7X */ op_ld_r_r,  op_ld_r_r,   op_ld_r_r,   op_ld_r_r, op_ld_r_r, op_ld_r_r,  NULL,      op_ld_r_r, op_ld_r_r,  op_ld_r_r,    op_ld_r_r,   op_ld_r_r,      op_ld_r_r, op_ld_r_r,  op_ld_r_r, op_ld_r_r,
-/* 8X */ op_add_r,   op_add_r,    op_add_r,    op_add_r,  op_add_r,  op_add_r,   op_add_r,  op_add_r,  op_adc_r,   op_adc_r,     op_adc_r,    op_adc_r,       op_adc_r,  op_adc_r,   op_adc_r,  op_adc_r,
-/* 9X */ op_sub_r,   op_sub_r,    op_sub_r,    op_sub_r,  op_sub_r,  op_sub_r,   op_sub_r,  op_sub_r,  NULL,       NULL,         NULL,        NULL,           NULL,      NULL,       NULL,      NULL,
-/* AX */ op_and_r,   op_and_r,    op_and_r,    op_and_r,  op_and_r,  op_and_r,   op_and_r,  op_and_r,  op_xor_r,   op_xor_r,     op_xor_r,    op_xor_r,       op_xor_r,  op_xor_r,   op_xor_r,  op_xor_r,
-/* BX */ op_or_r,    op_or_r,     op_or_r,     op_or_r,   op_or_r,   op_or_r,    op_or_r,   op_or_r,   op_cp_r,    op_cp_r,      op_cp_r,     op_cp_r,        op_cp_r,   op_cp_r,    op_cp_r,   op_cp_r,
-/* CX */ op_ret_cc,  op_pop_rr,   op_jp_cc_nn, op_jp_nn,  NULL,      op_push_rr, op_add_n,  op_rst_n,  op_ret_cc,  op_ret,       op_jp_cc_nn, cpu_execute_cb,      NULL,      op_call_nn, NULL,      op_rst_n,
-/* DX */ op_ret_cc,  op_pop_rr,   op_jp_cc_nn, NULL,      NULL,      op_push_rr, op_sub_n,  op_rst_n,  op_ret_cc,  op_reti,      op_jp_cc_nn, NULL,           NULL,      NULL,       NULL,      op_rst_n,
-/* EX */ op_ldh_n_a, op_pop_rr,   op_ldh_c_a,  NULL,      NULL,      op_push_rr, op_and_n,  op_rst_n,  NULL,       op_jp_hl,     op_ld_nn_a,  NULL,           NULL,      NULL,       op_xor_n,  op_rst_n,
-/* FX */ op_ldh_a_n, op_pop_rr,   op_ldh_a_c,  op_di,     NULL,      op_push_rr, op_or_n,   op_rst_n,  NULL,       NULL,         op_ld_a_nn,  op_ei,          NULL,      NULL,       op_cp_n,   op_rst_n,
+//       X0          X1           X2           X3         X4             X5          X6         X7         X8            X9            XA           XB              XC             XD          XE         XF
+/* 0X */ op_nop,     op_ld_rr_nn, op_ld_ind_a, op_inc_rr, op_inc_r,      op_dec_r,   op_ld_r_n, op_rlca,   op_ld_nn_sp,  op_add_hl_rr, op_ld_a_ind, op_dec_rr,      op_inc_r,      op_dec_r,   op_ld_r_n, op_rrca,      
+/* 1X */ op_stop,    op_ld_rr_nn, op_ld_ind_a, op_inc_rr, op_inc_r,      op_dec_r,   op_ld_r_n, op_rla,    op_jr_e,      op_add_hl_rr, op_ld_a_ind, op_dec_rr,      op_inc_r,      op_dec_r,   op_ld_r_n, op_rra,      
+/* 2X */ op_jr_cc_e, op_ld_rr_nn, op_ld_ind_a, op_inc_rr, op_inc_r,      op_dec_r,   op_ld_r_n, op_daa,    op_jr_cc_e,   op_add_hl_rr, op_ld_a_ind, op_dec_rr,      op_inc_r,      op_dec_r,   op_ld_r_n, op_cpl,      
+/* 3X */ op_jr_cc_e, op_ld_rr_nn, op_ld_ind_a, op_inc_rr, op_inc_r,      op_dec_r,   op_ld_r_n, op_scf,    op_jr_cc_e,   op_add_hl_rr, op_ld_a_ind, op_dec_rr,      op_inc_r,      op_dec_r,   op_ld_r_n, op_ccf,      
+/* 4X */ op_ld_r_r,  op_ld_r_r,   op_ld_r_r,   op_ld_r_r, op_ld_r_r,     op_ld_r_r,  op_ld_r_r, op_ld_r_r, op_ld_r_r,    op_ld_r_r,    op_ld_r_r,   op_ld_r_r,      op_ld_r_r,     op_ld_r_r,  op_ld_r_r, op_ld_r_r, 
+/* 5X */ op_ld_r_r,  op_ld_r_r,   op_ld_r_r,   op_ld_r_r, op_ld_r_r,     op_ld_r_r,  op_ld_r_r, op_ld_r_r, op_ld_r_r,    op_ld_r_r,    op_ld_r_r,   op_ld_r_r,      op_ld_r_r,     op_ld_r_r,  op_ld_r_r, op_ld_r_r, 
+/* 6X */ op_ld_r_r,  op_ld_r_r,   op_ld_r_r,   op_ld_r_r, op_ld_r_r,     op_ld_r_r,  op_ld_r_r, op_ld_r_r, op_ld_r_r,    op_ld_r_r,    op_ld_r_r,   op_ld_r_r,      op_ld_r_r,     op_ld_r_r,  op_ld_r_r, op_ld_r_r,
+/* 7X */ op_ld_r_r,  op_ld_r_r,   op_ld_r_r,   op_ld_r_r, op_ld_r_r,     op_ld_r_r,  op_halt,   op_ld_r_r, op_ld_r_r,    op_ld_r_r,    op_ld_r_r,   op_ld_r_r,      op_ld_r_r,     op_ld_r_r,  op_ld_r_r, op_ld_r_r,
+/* 8X */ op_add_r,   op_add_r,    op_add_r,    op_add_r,  op_add_r,      op_add_r,   op_add_r,  op_add_r,  op_adc_r,     op_adc_r,     op_adc_r,    op_adc_r,       op_adc_r,      op_adc_r,   op_adc_r,  op_adc_r,
+/* 9X */ op_sub_r,   op_sub_r,    op_sub_r,    op_sub_r,  op_sub_r,      op_sub_r,   op_sub_r,  op_sub_r,  op_sbc_r,     op_sbc_r,     op_sbc_r,    op_sbc_r,       op_sbc_r,      op_sbc_r,   op_sbc_r,  op_sbc_r,
+/* AX */ op_and_r,   op_and_r,    op_and_r,    op_and_r,  op_and_r,      op_and_r,   op_and_r,  op_and_r,  op_xor_r,     op_xor_r,     op_xor_r,    op_xor_r,       op_xor_r,      op_xor_r,   op_xor_r,  op_xor_r,
+/* BX */ op_or_r,    op_or_r,     op_or_r,     op_or_r,   op_or_r,       op_or_r,    op_or_r,   op_or_r,   op_cp_r,      op_cp_r,      op_cp_r,     op_cp_r,        op_cp_r,       op_cp_r,    op_cp_r,   op_cp_r,
+/* CX */ op_ret_cc,  op_pop_rr,   op_jp_cc_nn, op_jp_nn,  op_call_cc_nn, op_push_rr, op_add_n,  op_rst_n,  op_ret_cc,    op_ret,       op_jp_cc_nn, cpu_execute_cb, op_call_cc_nn, op_call_nn, op_adc_n,  op_rst_n,
+/* DX */ op_ret_cc,  op_pop_rr,   op_jp_cc_nn, NULL,      op_call_cc_nn, op_push_rr, op_sub_n,  op_rst_n,  op_ret_cc,    op_reti,      op_jp_cc_nn, NULL,           op_call_cc_nn, NULL,       op_sbc_n,  op_rst_n,
+/* EX */ op_ldh_n_a, op_pop_rr,   op_ldh_c_a,  NULL,      NULL,          op_push_rr, op_and_n,  op_rst_n,  op_add_sp_e,  op_jp_hl,     op_ld_nn_a,  NULL,           NULL,          NULL,       op_xor_n,  op_rst_n,
+/* FX */ op_ldh_a_n, op_pop_rr,   op_ldh_a_c,  op_di,     NULL,          op_push_rr, op_or_n,   op_rst_n,  op_ld_hl_spe, op_ld_sp_hl,  op_ld_a_nn,  op_ei,          NULL,          NULL,       op_cp_n,   op_rst_n,
 };
 
 static uint8_t (*const op_table_cb[256])(gb_t*, uint8_t) = {
@@ -859,6 +874,199 @@ static uint8_t op_xor_n(gb_t *gb, uint8_t opcode)
     gb->cpu.a ^= read_n(gb);
     gb->cpu.f = (gb->cpu.a == 0) ? FLAG_Z : 0;
 
+    return 8;
+}
+
+static uint8_t op_ld_nn_sp(gb_t *gb, uint8_t opcode)
+{
+    (void)opcode;
+
+    uint16_t nn = read_nn(gb);
+
+    bus_write(gb, nn, gb->cpu.sp & 0xFF);
+    bus_write(gb, nn + 1, gb->cpu.sp >> 8);
+
+    return 20;
+}
+
+static uint8_t op_rrca(gb_t *gb, uint8_t opcode)
+{
+    (void)opcode;
+
+    gb->cpu.a = (gb->cpu.a >> 1) | (gb->cpu.a << 7);
+    gb->cpu.f = (gb->cpu.a & 0x80) ? FLAG_C : 0;
+
+    return 4;
+}
+
+static uint8_t op_rla(gb_t *gb, uint8_t opcode)
+{
+    (void)opcode;
+
+    bool c = gb->cpu.a & 0x80;
+    
+    gb->cpu.a = (gb->cpu.a << 1) | ((gb->cpu.f & FLAG_C) >> 4);
+    gb->cpu.f = c ? FLAG_C : 0;
+
+    return 4;
+}
+
+static uint8_t op_rra(gb_t *gb, uint8_t opcode)
+{
+    (void)opcode;
+
+    bool c = gb->cpu.a & 0x01;
+
+    gb->cpu.a = (gb->cpu.a >> 1) | ((gb->cpu.f & FLAG_C) << 3);
+    gb->cpu.f = c ? FLAG_C : 0;
+
+    return 4;
+}
+
+static uint8_t op_scf(gb_t *gb, uint8_t opcode)
+{
+    (void)opcode;
+
+    gb->cpu.f = (gb->cpu.f & FLAG_Z) | FLAG_C;
+
+    return 4;
+}
+
+static uint8_t op_ccf(gb_t *gb, uint8_t opcode)
+{
+    (void)opcode;
+
+    gb->cpu.f = (gb->cpu.f & FLAG_Z) | ((gb->cpu.f & FLAG_C) ^ FLAG_C);
+
+    return 4;
+}
+
+static uint8_t op_stop(gb_t *gb, uint8_t opcode)
+{
+    // Not a full stop implementation.
+
+    (void)opcode;
+
+    read_n(gb);
+
+    return 4;
+}
+
+static uint8_t op_halt(gb_t *gb, uint8_t opcode)
+{
+    (void)opcode;
+
+    gb->cpu.halted = true;
+
+    return 4;
+}
+
+static uint8_t op_sbc_r(gb_t *gb, uint8_t opcode)
+{
+    uint8_t idx = opcode & 0x07;
+    uint8_t val = read_r(gb, idx);
+    uint8_t c_bit = (gb->cpu.f & FLAG_C) >> 4;
+    uint8_t result = gb->cpu.a - val - c_bit;
+
+    bool z = (result == 0);
+    bool h = (gb->cpu.a & 0x0F) < (val & 0x0F) + c_bit;
+    bool c = gb->cpu.a < val + c_bit;
+
+    gb->cpu.a = result;
+
+    gb->cpu.f = (z ? FLAG_Z : 0) | FLAG_N | (h ? FLAG_H : 0) | (c ? FLAG_C : 0);
+
+    return idx == 6 ? 8 : 4;
+}
+
+static uint8_t op_call_cc_nn(gb_t *gb, uint8_t opcode)
+{
+    uint8_t idx = (opcode & 0x18) >> 3;
+    uint16_t nn = read_nn(gb);
+    bool cc = check_cc(gb, idx);
+
+    if (cc) 
+    {
+        push_u16(gb, gb->cpu.pc);
+        gb->cpu.pc = nn;
+    }
+
+    return cc ? 24 : 12;
+}
+
+static uint8_t op_adc_n(gb_t *gb, uint8_t opcode)
+{
+    (void)opcode;
+    
+    uint8_t val = read_n(gb);
+    uint8_t c_bit = (gb->cpu.f & FLAG_C) >> 4;
+    uint8_t result = gb->cpu.a + val + c_bit;
+
+    bool z = (result == 0);
+    bool h = (gb->cpu.a & 0x0F) + (val & 0x0F) + c_bit > 0x0F;
+    bool c = (uint16_t)gb->cpu.a + (uint16_t)val + (uint16_t)c_bit > 0xFF;
+
+    gb->cpu.a = result;
+
+    gb->cpu.f = (z ? FLAG_Z : 0) | (h ? FLAG_H : 0) | (c ? FLAG_C : 0);
+
+    return 8;
+}
+
+static uint8_t op_sbc_n(gb_t *gb, uint8_t opcode)
+{
+    (void)opcode;
+
+    uint8_t val = read_n(gb);
+    uint8_t c_bit = (gb->cpu.f & FLAG_C) >> 4;
+    uint8_t result = gb->cpu.a - val - c_bit;
+
+    bool z = (result == 0);
+    bool h = (gb->cpu.a & 0x0F) < (val & 0x0F) + c_bit;
+    bool c = gb->cpu.a < val + c_bit;
+
+    gb->cpu.a = result;
+
+    gb->cpu.f = (z ? FLAG_Z : 0) | FLAG_N | (h ? FLAG_H : 0) | (c ? FLAG_C : 0);
+
+    return 8;
+}
+
+static uint8_t op_add_sp_e(gb_t *gb, uint8_t opcode)
+{
+    (void)opcode;
+
+    int8_t val = read_e(gb);
+
+    bool h = (gb->cpu.sp & 0x0F) + ((uint8_t)val & 0x0F) > 0x0F;
+    bool c = (gb->cpu.sp & 0xFF) + (uint8_t)val > 0xFF;
+
+    gb->cpu.sp += val;
+
+    gb->cpu.f = (h ? FLAG_H : 0) | (c ? FLAG_C : 0);
+
+    return 16;   
+}
+
+static uint8_t op_ld_hl_spe(gb_t *gb, uint8_t opcode)
+{
+    (void)opcode;
+
+    int8_t val = read_e(gb);
+
+    bool h = (gb->cpu.sp & 0x0F) + ((uint8_t)val & 0x0F) > 0x0F;
+    bool c = (gb->cpu.sp & 0xFF) + (uint8_t)val > 0xFF;
+
+    gb->cpu.hl = gb->cpu.sp + val;
+
+    gb->cpu.f = (h ? FLAG_H : 0) | (c ? FLAG_C : 0);
+
+    return 12;
+}
+
+static uint8_t op_ld_sp_hl(gb_t *gb, uint8_t opcode)
+{
+    gb->cpu.sp = gb->cpu.hl;
     return 8;
 }
 
