@@ -17,6 +17,12 @@ static void image_from_frame(gb_t *gb, Image *image);
 
 int main(int argc, char *argv[])
 {
+    if (argc < 2)
+    {
+        printf("Usage:\nkbe [rom_path]\n");
+        return 1;
+    }
+
     gb_t gb = {0};
     gb_init(&gb);
 
