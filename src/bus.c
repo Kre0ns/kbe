@@ -22,11 +22,20 @@ uint8_t bus_read(gb_t *gb, uint16_t addr)
 
 void bus_write(gb_t *gb, uint16_t addr, uint8_t val)
 {
-    if (addr == 0xFF04) 
+    if (addr == 0xFF00)
+    {
+        gb->io[REG_JOYP] = (gb->io[REG_JOYP] & 0xCF) | (val & 0x30);
+        return;
+    }
+    else if (addr == 0xFF04) 
     { 
         gb->io[REG_DIV] = 0; 
         gb->timers.div_counter = 0;
         return; 
+    }
+    else if (addr == 0xFF44)
+    {
+        return;
     }
     else if (addr == 0xFF46) 
     {
