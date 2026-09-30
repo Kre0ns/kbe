@@ -1,6 +1,7 @@
 # kbe
 
 ![Hackatime time](https://hackatime.hackclub.com/api/v1/badge/U07D6SS37SL/Kre0ns/kbe)
+![GitHub Release](https://img.shields.io/github/v/release/Kre0ns/kbe)
 
 A Game Boy (DMG) emulator written in C.
 
