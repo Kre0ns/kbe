@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-void cart_load(gb_t *gb, char *path)
+bool cart_load(gb_t *gb, char *path)
 {
     FILE *cart_file;
     long rom_size = -1L;
@@ -12,28 +12,28 @@ void cart_load(gb_t *gb, char *path)
     if (!cart_file)
     {
         perror("Failed to open cartridge");
-        return;
+        return false;
     }
     
     if (fseek(cart_file, 0L, SEEK_END) != 0)
     {
         perror("Failed to seek cartridge");
         fclose(cart_file);
-        return;
+        return false;
     }
 
     if ((rom_size = ftell(cart_file)) == -1L)
     {
         perror("Failed to get cartridge rom size");
         fclose(cart_file);
-        return;
+        return false;
     }
 
     if (rom_size < 0x150)
     {
         fprintf(stderr, "Not a valid ROM: too small (%ld bytes)\n", rom_size);
         fclose(cart_file);
-        return;
+        return false;
     }
 
     gb->cart.rom = malloc(rom_size * sizeof(uint8_t));
@@ -41,7 +41,7 @@ void cart_load(gb_t *gb, char *path)
     {
         perror("Failed to malloc for cartridge rom");
         fclose(cart_file);
-        return;
+        return false;
     }
 
     rewind(cart_file);
@@ -52,13 +52,15 @@ void cart_load(gb_t *gb, char *path)
         fclose(cart_file);
         free(gb->cart.rom);
         gb->cart.rom = NULL;
-        return;
+        return false;
     }
 
     gb->cart.rom_size = rom_size;
     gb->cart.type = gb->cart.rom[0x147];
 
     fclose(cart_file);
+
+    return true;
 }
 
 uint8_t cart_read(gb_t *gb, uint16_t addr)

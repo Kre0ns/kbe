@@ -1,9 +1,11 @@
 #pragma once
 
 #include <stdint.h>
+#include <stdbool.h>
+
 #include "gb.h"
 
-void cart_load(gb_t *gb, char *path);
+bool cart_load(gb_t *gb, char *path);
 
 uint8_t cart_read(gb_t *gb, uint16_t addr);
 

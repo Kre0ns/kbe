@@ -15,12 +15,15 @@
 
 static void image_from_frame(gb_t *gb, Image *image);
 
-int main()
+int main(int argc, char *argv[])
 {
     gb_t gb = {0};
     gb_init(&gb);
 
-    cart_load(&gb, "./Tetris (World) (Rev 1).gb");
+    if (!cart_load(&gb, argv[1]))
+    {
+        return 1;
+    }
 
     printf("Title: %s\n", (char*)(gb.cart.rom + 0x134));
 
