@@ -91,7 +91,12 @@ static uint8_t cpu_execute_cb(gb_t *gb, uint8_t opcode);
 
 static noreturn void op_unimplemented_cb(gb_t *gb, uint8_t opcode);
 
+static uint8_t op_rlc_r(gb_t *gb, uint8_t opcode);
+static uint8_t op_rrc_r(gb_t *gb, uint8_t opcode);
+static uint8_t op_rl_r(gb_t *gb, uint8_t opcode);
+static uint8_t op_rr_r(gb_t *gb, uint8_t opcode);
 static uint8_t op_sla_r(gb_t *gb, uint8_t opcode);
+static uint8_t op_sra_r(gb_t *gb, uint8_t opcode);
 static uint8_t op_swap_r(gb_t *gb, uint8_t opcode);
 static uint8_t op_srl_r(gb_t *gb, uint8_t opcode);
 static uint8_t op_res_b_r(gb_t *gb, uint8_t opcode);
@@ -120,9 +125,9 @@ static uint8_t (*const op_table[256])(gb_t*, uint8_t) = {
 
 static uint8_t (*const op_table_cb[256])(gb_t*, uint8_t) = {
 //       X0          X1          X2          X3          X4          X5          X6          X7          X8          X9          XA          XB          XC          XD          XE          XF
-/* 0X */ NULL,       NULL,       NULL,       NULL,       NULL,       NULL,       NULL,       NULL,       NULL,       NULL,       NULL,       NULL,       NULL,       NULL,       NULL,       NULL,      
-/* 1X */ NULL,       NULL,       NULL,       NULL,       NULL,       NULL,       NULL,       NULL,       NULL,       NULL,       NULL,       NULL,       NULL,       NULL,       NULL,       NULL,
-/* 2X */ op_sla_r,   op_sla_r,   op_sla_r,   op_sla_r,   op_sla_r,   op_sla_r,   op_sla_r,   op_sla_r,   NULL,       NULL,       NULL,       NULL,       NULL,       NULL,       NULL,       NULL,
+/* 0X */ op_rlc_r,   op_rlc_r,   op_rlc_r,   op_rlc_r,   op_rlc_r,   op_rlc_r,   op_rlc_r,   op_rlc_r,   op_rrc_r,   op_rrc_r,   op_rrc_r,   op_rrc_r,   op_rrc_r,   op_rrc_r,   op_rrc_r,   op_rrc_r,   
+/* 1X */ op_rl_r,    op_rl_r,    op_rl_r,    op_rl_r,    op_rl_r,    op_rl_r,    op_rl_r,    op_rl_r,    op_rr_r,    op_rr_r,    op_rr_r,    op_rr_r,    op_rr_r,    op_rr_r,    op_rr_r,    op_rr_r, 
+/* 2X */ op_sla_r,   op_sla_r,   op_sla_r,   op_sla_r,   op_sla_r,   op_sla_r,   op_sla_r,   op_sla_r,   op_sra_r,   op_sra_r,   op_sra_r,   op_sra_r,   op_sra_r,   op_sra_r,   op_sra_r,   op_sra_r,
 /* 3X */ op_swap_r,  op_swap_r,  op_swap_r,  op_swap_r,  op_swap_r,  op_swap_r,  op_swap_r,  op_swap_r,  op_srl_r,   op_srl_r,   op_srl_r,   op_srl_r,   op_srl_r,   op_srl_r,   op_srl_r,   op_srl_r,
 /* 4X */ op_bit_b_r, op_bit_b_r, op_bit_b_r, op_bit_b_r, op_bit_b_r, op_bit_b_r, op_bit_b_r, op_bit_b_r, op_bit_b_r, op_bit_b_r, op_bit_b_r, op_bit_b_r, op_bit_b_r, op_bit_b_r, op_bit_b_r, op_bit_b_r,
 /* 5X */ op_bit_b_r, op_bit_b_r, op_bit_b_r, op_bit_b_r, op_bit_b_r, op_bit_b_r, op_bit_b_r, op_bit_b_r, op_bit_b_r, op_bit_b_r, op_bit_b_r, op_bit_b_r, op_bit_b_r, op_bit_b_r, op_bit_b_r, op_bit_b_r,
@@ -1066,7 +1071,10 @@ static uint8_t op_ld_hl_spe(gb_t *gb, uint8_t opcode)
 
 static uint8_t op_ld_sp_hl(gb_t *gb, uint8_t opcode)
 {
+    (void)opcode;
+
     gb->cpu.sp = gb->cpu.hl;
+    
     return 8;
 }
 
@@ -1081,6 +1089,66 @@ static noreturn void op_unimplemented_cb(gb_t *gb, uint8_t opcode)
     exit(1);
 }
 
+static uint8_t op_rlc_r(gb_t *gb, uint8_t opcode)
+{
+    uint8_t idx = opcode & 0x07;
+    uint8_t r = read_r(gb, idx);
+    uint8_t result = (r << 1) | (r >> 7);
+
+    bool z = result == 0;
+    bool c = r & 0x80;
+    
+    write_r(gb, idx, result);
+    gb->cpu.f = (z ? FLAG_Z : 0)| (c ? FLAG_C : 0);
+
+    return idx == 6 ? 16 : 8;
+}
+
+static uint8_t op_rrc_r(gb_t *gb, uint8_t opcode)
+{
+    uint8_t idx = opcode & 0x07;
+    uint8_t r = read_r(gb, idx);
+    uint8_t result = (r >> 1) | (r << 7);
+
+    bool z = result == 0;
+    bool c = r & 0x01;
+    
+    write_r(gb, idx, result);
+    gb->cpu.f = (z ? FLAG_Z : 0)| (c ? FLAG_C : 0);
+
+    return idx == 6 ? 16 : 8;
+}
+
+static uint8_t op_rl_r(gb_t *gb, uint8_t opcode)
+{
+    uint8_t idx = opcode & 0x07;
+    uint8_t r = read_r(gb, idx);
+    uint8_t result = (r << 1) | ((gb->cpu.f & FLAG_C) >> 4);
+
+    bool z = result == 0;
+    bool c = r & 0x80;
+    
+    write_r(gb, idx, result);
+    gb->cpu.f = (z ? FLAG_Z : 0)| (c ? FLAG_C : 0);
+
+    return idx == 6 ? 16 : 8;
+}
+
+static uint8_t op_rr_r(gb_t *gb, uint8_t opcode)
+{
+    uint8_t idx = opcode & 0x07;
+    uint8_t r = read_r(gb, idx);
+    uint8_t result = (r >> 1) | ((gb->cpu.f & FLAG_C) << 3);
+
+    bool z = result == 0;
+    bool c = r & 0x01;
+    
+    write_r(gb, idx, result);
+    gb->cpu.f = (z ? FLAG_Z : 0)| (c ? FLAG_C : 0);
+
+    return idx == 6 ? 16 : 8;
+}
+
 static uint8_t op_sla_r(gb_t *gb, uint8_t opcode)
 {
     uint8_t idx = opcode & 0x07;
@@ -1089,6 +1157,22 @@ static uint8_t op_sla_r(gb_t *gb, uint8_t opcode)
     
     bool z = (result == 0);
     bool c = r & 0x80;
+
+    write_r(gb, idx, result);
+
+    gb->cpu.f = (z ? FLAG_Z : 0) | (c ? FLAG_C : 0);
+    
+    return idx == 6 ? 16 : 8;
+}
+
+static uint8_t op_sra_r(gb_t *gb, uint8_t opcode)
+{
+    uint8_t idx = opcode & 0x07;
+    uint8_t r = read_r(gb, idx);
+    uint8_t result = (r >> 1) | (r & 0x80);
+    
+    bool z = (result == 0);
+    bool c = r & 0x01;
 
     write_r(gb, idx, result);
 
